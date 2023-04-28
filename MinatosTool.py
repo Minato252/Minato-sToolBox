@@ -176,6 +176,8 @@ class MinatosTool:
         # Set the focus to the input field
         # field.focus_set()
 
+        self.crollable_frame._scrollbar._command('moveto', 1.0)
+
     def copy_text(self, index):
         text = self.fields[index]["text"].get()
         self.root.clipboard_clear()
@@ -222,6 +224,8 @@ class TodoList(customtkinter.CTkFrame):
         # Create a text box for adding new tasks
         self.add_entry = customtkinter.CTkEntry(self.master)
         self.add_entry.grid(row=0,column=0,columnspan=2,pady=5,sticky="new",)
+        # Bind the Return event to the input field
+        self.add_entry.bind("<Return>", self.add_task)
 
         # Create a button to add new tasks
         self.add_button = customtkinter.CTkButton(self.master,width=1, text="Add Task", command=self.add_task)
@@ -230,7 +234,7 @@ class TodoList(customtkinter.CTkFrame):
         self.remove_button = customtkinter.CTkButton(self.master,width=1, text="Remove Completed Tasks", command=self.remove_task)
         self.remove_button.grid(row=1,column=1,pady=5,sticky="ne")
         # Create a frame to hold the task list
-        self.task_frame = customtkinter.CTkFrame(self.master)
+        self.task_frame = customtkinter.CTkScrollableFrame(self.master)
         self.task_frame.grid(row=2,column=0,columnspan=2,pady=5,sticky="nesw")
 
 
@@ -238,7 +242,7 @@ class TodoList(customtkinter.CTkFrame):
         # Create a list to store the tasks
         self.tasks = []
 
-    def add_task(self):
+    def add_task(self,event=None):
         # Get the task from the add entry
         task_text = self.add_entry.get()
 
@@ -295,18 +299,21 @@ class TodoList(customtkinter.CTkFrame):
         frame.configure(fg_color='green')
 
     def off_bold_frame(self,frame):
-        default = customtkinter.CTkFrame(self.master)._fg_color
+        default = customtkinter.CTkFrame(self.task_frame)._fg_color
         frame.configure(fg_color=default)
+
     def edit_task(self, task, task_text, task_frame):
         # Create a new window for editing the task
         edit_window = customtkinter.CTkToplevel(self.master)
-        edit_window.focus()
+        edit_window.attributes("-topmost", True)
+        edit_window.geometry("200x120")
+
         # Create a label and entry for editing the task text
         edit_label = customtkinter.CTkLabel(edit_window, text="Edit task:")
         edit_label.pack(pady=5)
         edit_entry = customtkinter.CTkEntry(edit_window, width=30)
         edit_entry.insert(0, task_text)
-        edit_entry.pack(pady=5)
+        edit_entry.pack(pady=5,padx=5,fill="x",expand=True)
 
         # Create a button to save the edited task
         save_button = customtkinter.CTkButton(edit_window, text="Save", command=lambda: self.save_task(task, edit_entry.get(), task_frame, edit_window))
@@ -314,7 +321,7 @@ class TodoList(customtkinter.CTkFrame):
 
     def save_task(self, task, new_task_text, task_frame, edit_window):
         # Update the task text
-        task.config(text=new_task_text)
+        task.configure(text=new_task_text)
 
         # Update the task in the list of tasks
         for i, t in enumerate(self.tasks):
